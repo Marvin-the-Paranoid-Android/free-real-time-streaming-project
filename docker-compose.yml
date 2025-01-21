@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    ports:
+      - "2181:2181"
+    volumes:
+      - zookeeper_data:/bitnami/zookeeper
+
+  kafka:
+    image: bitnami/kafka:latest
+    environment:
+      KAFKA_ADVERTISED_LISTENER: INSIDE-KAFKA:9093
+      KAFKA_LISTENER_SECURITY_PROTOCOL: PLAINTEXT
+      KAFKA_LISTENER_NAME_INTERNAL: INSIDE
+      KAFKA_LISTENER_PORT_INTERNAL: 9093
+      KAFKA_LISTENER_INTER_BROKER_PROTOCOL: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+      KAFKA_LISTENER_PORT_EXTERNAL: 9092
+      KAFKA_LISTENER_NAME_EXTERNAL: OUTSIDE
+      KAFKA_ADVERTISED_LISTENER_EXTERNAL: OUTSIDE-KAFKA:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_EXTERNAL: PLAINTEXT
+      KAFKA_LISTENER_INTER_BROKER_PROTOCOL_EXTERNAL: OUTSIDE
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    depends_on:
+      - zookeeper
+
+  postgresql:
+    image: bitnami/postgresql:latest
+    environment:
+      POSTGRESQL_USERNAME: user
+      POSTGRESQL_PASSWORD: password
+      POSTGRESQL_DATABASE: streaming_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgresql_data:/bitnami/postgresql
+
+volumes:
+  postgresql_data:
+    driver: local
+  zookeeper_data:
+    driver: local
